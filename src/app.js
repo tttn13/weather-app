@@ -158,12 +158,15 @@ const getWeatherData = (() => {
   };
 
   const loadPage = () => {
+    const message = document.querySelector(".error");
     const success = (pos) => {
       let crd = pos.coords;
+      message.innerText = "";
       getLocalWeather(crd.latitude, crd.longitude);
     };
 
     document.addEventListener("DOMContentLoaded", (event) => {
+      message.innerText = "Retrieving your location...";
       navigator.geolocation.getCurrentPosition(success);
     });
   };
