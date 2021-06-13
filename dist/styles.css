@@ -194,3 +194,8 @@ body {
   width: 100px;
   height: 100px;
 }
+
+.ajax-section i {
+  float: right;
+  cursor: pointer;
+}

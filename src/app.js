@@ -1,3 +1,5 @@
+import API_data from "./API";
+
 const appLayout = (() => {
   const createForm = () => {
     const main = document.getElementById("main");
@@ -36,6 +38,14 @@ const appLayout = (() => {
 
     const cityListItem = document.createElement("li");
     cityListItem.classList.add("city");
+    cityListItem.id = name;
+
+    const delete_icon = document.createElement("i");
+    delete_icon.className = "fas fa-times";
+    delete_icon.addEventListener("click", () => {
+      getWeatherData.deleteCity(name);
+      removeCard(name);
+    });
 
     const header = document.createElement("h2");
     header.className = "city-name";
@@ -65,11 +75,21 @@ const appLayout = (() => {
     cityFigure.appendChild(cityImage);
     cityFigure.appendChild(figCaption);
 
+    cityListItem.appendChild(delete_icon);
     cityListItem.appendChild(header);
     cityListItem.appendChild(cityTemp);
     cityListItem.appendChild(cityFigure);
 
     document.querySelector("ul").appendChild(cityListItem);
+  };
+
+  const removeCard = (selected_city) => {
+    const all_cities = document.querySelectorAll("li");
+    all_cities.forEach((city) => {
+      if (city.id == selected_city) {
+        city.remove();
+      }
+    });
   };
   return {
     createForm,
@@ -78,6 +98,8 @@ const appLayout = (() => {
 })();
 
 const getWeatherData = (() => {
+  let cities = [];
+
   const showError = (errorMessage, city) => {
     if (city.validity.typeMismatch) {
       errorMessage.textContent = "Entered value needs to be a city name";
@@ -88,21 +110,17 @@ const getWeatherData = (() => {
   };
 
   const isDuplicate = (input_value) => {
-    const listItems = Array.from(document.querySelectorAll(".city"));
-    let isDup = false;
-    if (listItems.length > 0) {
-      listItems.forEach((item) => {
-        const content = item
-          .querySelector(".city-name span")
-          .textContent.toLowerCase();
-        console.log(content);
-        console.log(input_value);
-        if (content === input_value.toLowerCase()) {
-          isDup = true;
-        }
-      });
-    }
-    return isDup;
+    let duplicateCities = cities.filter(
+      (item) => item.name.toLowerCase() == input_value.toLowerCase()
+    );
+    return duplicateCities.length > 0;
+  };
+
+  const deleteCity = (cityName) => {
+    cities = cities.filter(
+      (item) => item.name.toLowerCase() != cityName.toLowerCase()
+    );
+    persistToStorage();
   };
 
   const capitalize = ([firstLetter, ...restOfWord]) =>
@@ -122,7 +140,6 @@ const getWeatherData = (() => {
     });
 
     form.addEventListener("submit", (event) => {
-      console.log(input.value);
       event.preventDefault();
       const isDup = isDuplicate(input.value);
       if (isDup) {
@@ -140,23 +157,72 @@ const getWeatherData = (() => {
     });
   };
 
+  const loadPage = () => {
+    const success = (pos) => {
+      let crd = pos.coords;
+      getLocalWeather(crd.latitude, crd.longitude);
+    };
+
+    document.addEventListener("DOMContentLoaded", (event) => {
+      navigator.geolocation.getCurrentPosition(success);
+    });
+  };
+
+  async function getLocalWeather(lat, lon) {
+    await callAPI(
+      API_data.get_lat_lon_URL(lat, lon),
+      "Unable to retrieve your location"
+    );
+  }
+
   async function getWeather(cityName) {
-    const API_KEY = "ef064064bbf6210a74b85db187186402";
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${API_KEY}&units=imperial`;
+    await callAPI(
+      API_data.get_city_URL(cityName),
+      "Please search for a valid city 😩"
+    );
+  }
+
+  async function callAPI(url, message) {
     try {
       let response = await fetch(url, { mode: "cors" });
       let cityData = await response.json();
-      appLayout.setUpViews(cityData);
+      if (!isDuplicate(cityData.name)) {
+        cities.push(cityData);
+        console.log(cities);
+        persistToStorage();
+        appLayout.setUpViews(cityData);
+      }
     } catch (error) {
       const errorMessage = document.querySelector(".error");
-      errorMessage.textContent = "Please search for a valid city 😩";
+      errorMessage.textContent = message;
     }
   }
+
+  const CITIES_LIST_ID = "citiesStorage";
+
+  const persistToStorage = () => {
+    localStorage.setItem(CITIES_LIST_ID, JSON.stringify(cities));
+  };
+
+  const loadFromStorage = () => {
+    const citiesFromStorage = JSON.parse(localStorage.getItem(CITIES_LIST_ID));
+    if (citiesFromStorage !== null) {
+      cities = citiesFromStorage;
+      console.log(cities);
+    } else {
+      cities = [];
+    }
+    cities.forEach(appLayout.setUpViews);
+  };
+
   return {
     getWeather,
     validateForm,
     showError,
     isDuplicate,
+    loadPage,
+    deleteCity,
+    loadFromStorage,
   };
 })();
 
