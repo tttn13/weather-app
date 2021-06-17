@@ -191,7 +191,6 @@ const getWeatherData = (() => {
       let cityData = await response.json();
       if (!isDuplicate(cityData.name)) {
         cities.push(cityData);
-        console.log(cities);
         persistToStorage();
         appLayout.setUpViews(cityData);
       }
