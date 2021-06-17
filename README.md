@@ -13,7 +13,7 @@ Weather App is a simple yet fully functional weather application that shows the 
 
 ## Key Features
 
-##### Grab weather of the user's location 
+### Grab weather of the user's location 
 - When the page first loaded, the user’s location and its weather data will be retrieved using geolocation.  
 <img src='./assets/current_location.gif'>
 
@@ -30,7 +30,7 @@ const loadPage = () => {
   };
 ~~~
 
-##### Display weather of the desired location
+### Display weather of the desired location
 - As users start searching for the weather for a specific city, the entered input is going to get validated. 
 <img src='./assets/form_validation.gif'>
 
@@ -63,10 +63,10 @@ async function getWeather(cityName) {
   }
 ~~~
 
+### Delete Setting
 - Users can delete unwanted weather card by clicking the delete icon.
 <img src='./assets/delete.gif'>
-
-##### 
+ 
 
 ## Future Development Plans
 A new version is going to be released to extend the functionality of the app:
